@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Project Guidance & Team Portal | Academic Department Portal</title>
+
+  <!-- Google Fonts: Plus Jakarta Sans & Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <!-- Font Awesome 6 Icons via CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+  <!-- Socket.IO Client CDN -->
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+
+  <!-- Application Stylesheets (Original modular CSS preserved) -->
+  <link rel="stylesheet" href="/static/css/style.css" />
+  <link rel="stylesheet" href="/static/css/components.css" />
+  <link rel="stylesheet" href="/static/css/responsive.css" />
+</head>
+<body>
+  <div id="app">
+    <!-- Loading Screen -->
+    <div id="loading-screen" style="height: 100vh; display: flex; align-items: center; justify-content: center; background-color: var(--bg-main);">
+      <i class="fa-solid fa-spinner fa-spin text-3xl text-indigo"></i>
+    </div>
+
+    <!-- Auth Container (Unauthenticated) -->
+    <div id="auth-container" style="display: none;"></div>
+
+    <!-- Authenticated App Shell -->
+    <div id="portal-shell" class="app-wrapper" style="display: none;">
+      <!-- Mobile Drawer Overlay -->
+      <div id="mobile-overlay" class="mobile-drawer-overlay" style="display: none;"></div>
+
+      <!-- Real-Time Toast Notification -->
+      <div id="toast-container"></div>
+
+      <!-- Sidebar -->
+      <aside id="main-sidebar" class="sidebar">
+        <!-- Brand Header -->
+        <div class="sidebar-brand-wrapper">
+          <div class="brand-icon-shield">
+            <i class="fa-solid fa-graduation-cap"></i>
+          </div>
+          <div class="brand-text-block">
+            <h1>ProjectPortal</h1>
+            <span>CS Department SaaS</span>
+          </div>
+        </div>
+
+        <!-- Scrollable Navigation Items -->
+        <div class="sidebar-scroll-content" id="sidebar-nav-container"></div>
+
+        <!-- User Footer -->
+        <div class="sidebar-footer-user">
+          <div class="footer-user-info">
+            <img id="sidebar-user-avatar" src="" alt="User Avatar" class="avatar avatar-sm current-user-avatar" />
+            <div class="footer-user-details">
+              <div id="sidebar-user-name" class="user-name current-user-name"></div>
+              <div id="sidebar-user-role" class="user-role current-user-role" style="text-transform: capitalize;"></div>
+            </div>
+          </div>
+          <button id="btn-sidebar-signout" class="btn-icon-subtle" title="Sign out of portal" style="width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;">
+            <i class="fa-solid fa-arrow-right-from-bracket text-muted"></i>
+          </button>
+        </div>
+      </aside>
+
+      <!-- Main Layout -->
+      <div class="app-main-layout">
+        <!-- Topbar -->
+        <header class="topbar">
+          <div class="topbar-left">
+            <button id="btn-toggle-mobile-nav" class="btn-hamburger" title="Toggle Navigation" style="cursor: pointer;">
+              <i class="fa-solid fa-bars"></i>
+            </button>
+            <div class="topbar-title-block">
+              <h2 id="topbar-title" class="topbar-title">Academic Portal</h2>
+              <div class="topbar-breadcrumb">
+                <i class="fa-solid fa-house text-xs"></i> <span>/</span> <span id="breadcrumb-role">role</span> <span>/</span> <span id="breadcrumb-view">dashboard</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="topbar-right">
+            <!-- Quick Demo Persona Switcher -->
+            <div class="role-switcher-wrap" title="Switch instantly between HOD, Faculty, and Student demo accounts">
+              <i class="fa-solid fa-user-gear text-indigo text-xs"></i>
+              <label for="topbar-role-select">Demo Persona:</label>
+              <select id="topbar-role-select" class="role-select-native">
+                <option value="hod">HOD (Dr. Vance)</option>
+                <option value="faculty">Faculty (Dr. Jenkins)</option>
+                <option value="student">Student (Alex Chen)</option>
+              </select>
+            </div>
+
+            <!-- Notifications Bell -->
+            <div style="position: relative;">
+              <button id="btn-topbar-notif" class="topbar-action-btn" title="Notifications">
+                <i class="fa-regular fa-bell"></i>
+                <span id="topbar-notif-badge" class="notif-badge-dot" style="display: none;">0</span>
+              </button>
+
+              <div id="topbar-notif-menu" class="notif-dropdown" style="display: none;">
+                <div class="notif-dropdown-header">
+                  <div>
+                    <h4 class="font-bold text-sm">Notifications</h4>
+                    <span id="topbar-notif-subtitle" class="text-xs text-muted">0 unread alert(s)</span>
+                  </div>
+                  <button id="btn-topbar-mark-all-read" class="text-xs text-indigo font-semibold hover:underline" style="display: none;">
+                    Mark all read
+                  </button>
+                </div>
+                <div id="topbar-notif-items" class="notif-dropdown-list" style="max-height: 300px; overflow-y: auto;">
+                  <div class="p-4 text-center text-xs text-muted">No notifications yet.</div>
+                </div>
+                <div class="p-3 text-center border-t border-light bg-subtle">
+                  <button id="btn-topbar-view-all-notifs" class="text-xs text-indigo font-bold hover:underline">
+                    View All Notifications <i class="fa-solid fa-arrow-right"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- User Profile Pill -->
+            <div style="position: relative;">
+              <div id="btn-topbar-profile" class="topbar-user-profile" style="cursor: pointer;">
+                <img id="topbar-user-avatar" src="" alt="Avatar" class="avatar avatar-sm current-user-avatar" />
+                <div class="line-tight text-left" style="display: flex; flexDirection: column;">
+                  <span id="topbar-user-name" class="text-xs font-bold block current-user-name"></span>
+                  <span id="topbar-user-role" class="text-xs text-muted block current-user-role" style="text-transform: capitalize;"></span>
+                </div>
+                <i class="fa-solid fa-chevron-down text-xs text-muted ml-1"></i>
+              </div>
+
+              <div id="topbar-profile-dropdown" class="dropdown-menu" style="display: none; position: absolute; right: 0; top: 115%; width: 200px; background: #fff; border-radius: 12px; box-shadow: var(--shadow-card); border: 1px solid var(--border-color); padding: 8px 0; z-index: 999;">
+                <div style="padding: 8px 16px; border-bottom: 1px solid var(--border-light);">
+                  <div id="dropdown-user-name" style="font-size: 13px; font-weight: bold;"></div>
+                  <div id="dropdown-user-email" style="font-size: 11px; color: var(--text-secondary);"></div>
+                </div>
+                <button id="btn-dropdown-signout" style="width: 100%; text-align: left; padding: 8px 16px; font-size: 13px; color: var(--color-danger); display: flex; align-items: center; gap: 8px;">
+                  <i class="fa-solid fa-arrow-right-from-bracket"></i> Sign Out
+                </button>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <!-- Main Content View Area -->
+        <main id="main-content" class="content-view-container" style="padding: 24px 32px;"></main>
+      </div>
+    </div>
+
+    <!-- Modals Container -->
+    <div id="modal-container"></div>
+  </div>
+
+  <!-- Vanilla JavaScript Application Modules -->
+  <script type="module" src="/static/js/app.js"></script>
+</body>
+</html>
